@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { generateStructured } from "@/lib/gemini";
+import { improveLocally } from "@/lib/local-parser";
 import { errorResponse } from "@/lib/api-error";
 
 export const runtime = "nodejs";
@@ -37,13 +38,17 @@ ${body.context ? `Context (role / company): ${body.context}\n` : ""}
 INPUT:
 ${input.map((s) => `- ${s}`).join("\n")}`;
 
-    const { items } = await generateStructured({
-      schema: resultSchema,
-      system: SYSTEM,
-      prompt,
-      temperature: 0.6,
-    });
-    return NextResponse.json({ items });
+    try {
+      const { items } = await generateStructured({
+        schema: resultSchema,
+        system: SYSTEM,
+        prompt,
+        temperature: 0.6,
+      });
+      return NextResponse.json({ items });
+    } catch {
+      return NextResponse.json({ items: improveLocally(body.kind, input) });
+    }
   } catch (err) {
     return errorResponse(err);
   }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { aiCvSchema } from "@/lib/cv-schema";
 import { generateStructured, LANG_NAMES } from "@/lib/gemini";
+import { parseCvLocally } from "@/lib/local-parser";
 import { errorResponse } from "@/lib/api-error";
 
 export const runtime = "nodejs";
@@ -48,8 +49,13 @@ NEW INFORMATION FROM USER:
 USER TEXT:
 """${body.text}"""`;
 
-    const cv = await generateStructured({ schema: aiCvSchema, system: SYSTEM, prompt });
-    return NextResponse.json({ cv });
+    try {
+      const cv = await generateStructured({ schema: aiCvSchema, system: SYSTEM, prompt });
+      return NextResponse.json({ cv });
+    } catch {
+      const cv = parseCvLocally(body.text, body.language);
+      return NextResponse.json({ cv });
+    }
   } catch (err) {
     return errorResponse(err);
   }

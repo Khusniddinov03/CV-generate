@@ -1,7 +1,9 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  outputFileTracingRoot: path.join(__dirname),
+  serverExternalPackages: ["puppeteer-core", "@google/genai"],
 };
 
 export default nextConfig;
